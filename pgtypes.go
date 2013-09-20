@@ -90,25 +90,29 @@ func (s StringArray) String() string {
 type IntArray []int
 
 func (self *IntArray) Scan(src interface{}) error {
+	if self == nil {
+		self = new(IntArray)
+	}
 	switch v := src.(type) {
 	case []byte:
-		if len(v) <= 2 {
-			*self = make(IntArray, 0)
+		if bytes.Equal(v, []byte("NULL")) {
+			self = nil
 			return nil
 		}
 		arr := make(IntArray, 0)
-		nums := bytes.Split(v[1:len(v)-1], []byte(","))
-		for _, num := range nums {
-			if bytes.Equal(num, []byte("NULL")) {
-				// yeah...I hope there's no null ints
-				arr = append(arr, 0)
-				continue
+		if len(v) > 2 {
+			var ch byte
+			for i, j := 1, 1; i < len(v); i++ {
+				ch = v[i]
+				if ch == ',' || ch == '}' {
+					n, err := strconv.Atoi(string(v[j:i]))
+					if err != nil {
+						return fmt.Errorf("pgtypes: (*IntArray).Scan: %v", err)
+					}
+					arr = append(arr, n)
+					j = i + 1
+				}
 			}
-			n, err := strconv.Atoi(string(num))
-			if err != nil {
-				return fmt.Errorf("pgtypes: (*IntArray).Scan: %v", err)
-			}
-			arr = append(arr, n)
 		}
 		*self = arr
 		return nil
