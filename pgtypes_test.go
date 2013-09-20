@@ -51,7 +51,7 @@ var out = [][]int{
 func TestNew(t *testing.T) {
 	for k, test := range data {
 		s := new(IntArray)
-		err := s.Scan2(test)
+		err := s.Scan(test)
 		if err != nil {
 			t.Error(err)
 			continue
