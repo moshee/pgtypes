@@ -2,7 +2,9 @@
 package pgtypes
 
 import (
+	"bytes"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -76,10 +78,42 @@ func (s *StringArray) Scan(src interface{}) error {
 		return nil
 
 	default:
-		return fmt.Errorf("Cannot scan %T into StringArray", v)
+		return fmt.Errorf("pgtypes: cannot scan %T into StringArray", v)
 	}
 }
 
 func (s StringArray) String() string {
 	return strings.Join([]string(s), "; ")
+}
+
+// A sql.Scanner for PostgreSQL int[] values
+type IntArray []int
+
+func (self *IntArray) Scan(src interface{}) error {
+	switch v := src.(type) {
+	case []byte:
+		if len(v) <= 2 {
+			*self = make(IntArray, 0)
+			return nil
+		}
+		arr := make(IntArray, 0)
+		nums := bytes.Split(v[1:len(v)-1], []byte(","))
+		for _, num := range nums {
+			if bytes.Equal(num, []byte("NULL")) {
+				// yeah...I hope there's no null ints
+				arr = append(arr, 0)
+				continue
+			}
+			n, err := strconv.Atoi(string(num))
+			if err != nil {
+				return fmt.Errorf("pgtypes: (*IntArray).Scan: %v", err)
+			}
+			arr = append(arr, n)
+		}
+		*self = arr
+		return nil
+
+	default:
+		return fmt.Errorf("pgtypes: cannot scan %T into IntArray", v)
+	}
 }
