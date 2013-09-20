@@ -1,0 +1,1 @@
+Package `pgtypes` provides `sql.Scanner`s for PostgreSQL's non-standard types, such as arrays. Only arrays at the moment, actually. This project is being developed for use in another project, so types will be implemented in the order that I need them.
