@@ -48,7 +48,7 @@ var out = [][]int{
 	{5},
 }
 
-func TestNew(t *testing.T) {
+func TestInts(t *testing.T) {
 	for k, test := range data {
 		s := new(IntArray)
 		err := s.Scan(test)
@@ -62,6 +62,49 @@ func TestNew(t *testing.T) {
 		}
 		if !eq(*s, out[k]) {
 			t.Errorf("'%s' should be '%v', not '%v'", string(test), out[k], *s)
+		}
+	}
+}
+
+var booldata = [][]byte{
+	[]byte("{}"),
+	[]byte("{NULL}"),
+	[]byte("{f,t,t,t,f,NULL,t,t}"),
+	[]byte("{t}"),
+	[]byte("{NULL,NULL,NULL,NULL}"),
+}
+
+var boolout = [][]bool{
+	{},
+	{false},
+	{false, true, true, true, false, false, true, true},
+	{true},
+	{false, false, false, false},
+}
+
+func booleq(a *BoolArray, b []bool) bool {
+	if len(*a) != len(b) {
+		return false
+	}
+
+	for i, A := range *a {
+		if A != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func TestBools(t *testing.T) {
+	for k, test := range booldata {
+		b := new(BoolArray)
+		err := b.Scan(test)
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+		if !booleq(b, boolout[k]) {
+			t.Errorf("'%v' != '%v'", b, boolout[k])
 		}
 	}
 }

@@ -105,11 +105,18 @@ func (self *IntArray) Scan(src interface{}) error {
 			for i, j := 1, 1; i < len(v); i++ {
 				ch = v[i]
 				if ch == ',' || ch == '}' {
-					n, err := strconv.Atoi(string(v[j:i]))
-					if err != nil {
-						return fmt.Errorf("pgtypes: (*IntArray).Scan: %v", err)
+					section := string(v[j:i])
+					if section == "NULL" {
+						// just hope this doesn't mess anything up, because
+						// jeez what a problem
+						arr = append(arr, 0)
+					} else {
+						n, err := strconv.Atoi(section)
+						if err != nil {
+							return fmt.Errorf("pgtypes: (*IntArray).Scan: %v", err)
+						}
+						arr = append(arr, n)
 					}
-					arr = append(arr, n)
 					j = i + 1
 				}
 			}
@@ -120,4 +127,40 @@ func (self *IntArray) Scan(src interface{}) error {
 	default:
 		return fmt.Errorf("pgtypes: cannot scan %T into IntArray", v)
 	}
+	return fmt.Errorf("pgtypes: IntArray: unexpected end of input")
+}
+
+type BoolArray []bool
+
+func (self *BoolArray) Scan(src interface{}) error {
+	if self == nil {
+		self = new(BoolArray)
+	}
+	switch v := src.(type) {
+	case []byte:
+		if bytes.Equal(v, []byte("NULL")) {
+			self = nil
+			return nil
+		}
+		arr := make(BoolArray, 0, (len(v)-1)/2)
+		for i := 0; i < len(v); i++ {
+			switch v[i] {
+			case '{', ',':
+			case 'f':
+				arr = append(arr, false)
+			case 't':
+				arr = append(arr, true)
+			case 'N':
+				// again, null value
+				arr = append(arr, false)
+				i += 3
+			case '}':
+				*self = arr
+				return nil
+			}
+		}
+	default:
+		return fmt.Errorf("pgtypes: cannot scan %T into BoolArray", v)
+	}
+	return fmt.Errorf("pgtypes: BoolArray: unexpected end of input")
 }
