@@ -18,8 +18,7 @@ func (s *StringArray) Scan(src interface{}) error {
 		return nil
 
 	case []byte:
-		switch string(v) {
-		case "NULL", "{NULL}":
+		if bytes.Equal(v, []byte("NULL")) {
 			s = nil
 			return nil
 		}
