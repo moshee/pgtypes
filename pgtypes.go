@@ -13,6 +13,10 @@ type StringArray []string
 
 func (s *StringArray) Scan(src interface{}) error {
 	switch v := src.(type) {
+	case nil:
+		s = nil
+		return nil
+
 	case []byte:
 		switch string(v) {
 		case "NULL", "{NULL}":
@@ -90,10 +94,11 @@ func (s StringArray) String() string {
 type IntArray []int
 
 func (self *IntArray) Scan(src interface{}) error {
-	if self == nil {
-		self = new(IntArray)
-	}
 	switch v := src.(type) {
+	case nil:
+		self = nil
+		return nil
+
 	case []byte:
 		if bytes.Equal(v, []byte("NULL")) {
 			self = nil
@@ -133,10 +138,11 @@ func (self *IntArray) Scan(src interface{}) error {
 type BoolArray []bool
 
 func (self *BoolArray) Scan(src interface{}) error {
-	if self == nil {
-		self = new(BoolArray)
-	}
 	switch v := src.(type) {
+	case nil:
+		self = nil
+		return nil
+
 	case []byte:
 		if bytes.Equal(v, []byte("NULL")) {
 			self = nil
